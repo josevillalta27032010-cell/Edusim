@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#07070f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>EduSim Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070f;--s1:#0d0d1a;--s2:#131326;--border:#222240;--b2:#2a2a50;
+  --blue:#4d7cff;--violet:#a855f7;--cyan:#22d3ee;--green:#4ade80;
+  --yellow:#fbbf24;--red:#f87171;--orange:#fb923c;--gold:#f59e0b;
+  --text:#e2e4f0;--sub:#8888b0;--dim:#44446a;
+  --ff:'DM Sans',sans-serif;--fm:'DM Mono',monospace;--fb:'Bebas Neue',cursive;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--ff);min-height:100vh;overflow-x:hidden;}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.4;}
+.app{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh;}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(7,7,15,.9);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
+.nav-logo{font-family:var(--fb);font-size:20px;letter-spacing:2px;background:linear-gradient(90deg,var(--blue),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{background:transparent;border:none;color:var(--sub);font-family:var(--fm);font-size:9px;letter-spacing:1px;padding:6px 10px;border-radius:6px;cursor:pointer;text-transform:uppercase;white-space:nowrap;transition:all .2s;}
+.nav-tab:hover{color:var(--text);background:var(--s2);}
+.nav-tab.active{color:var(--blue);background:rgba(77,124,255,.1);border:1px solid rgba(77,124,255,.2);}
+.creator-badge{background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;font-family:var(--fm);font-size:8px;letter-spacing:1px;padding:3px 8px;border-radius:20px;font-weight:700;}
+
+/* SCREENS */
+.screen{display:none;padding:20px 14px 100px;}
+.screen.visible{display:block;}
+.inner{max-width:900px;margin:0 auto;}
+
+/* HERO */
+.hero{text-align:center;padding:30px 0 36px;}
+.hero-tag{display:inline-block;background:rgba(77,124,255,.1);border:1px solid rgba(77,124,255,.3);color:var(--blue);font-family:var(--fm);font-size:9px;letter-spacing:3px;padding:4px 12px;border-radius:20px;margin-bottom:14px;}
+.hero-title{font-family:var(--fb);font-size:clamp(40px,9vw,80px);letter-spacing:4px;line-height:.9;background:linear-gradient(135deg,#fff 0%,var(--cyan) 35%,var(--violet) 70%,var(--blue) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:12px;color:var(--sub);margin-top:12px;font-weight:300;line-height:1.7;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:24px;}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+.stat-num{font-family:var(--fb);font-size:26px;letter-spacing:2px;color:var(--blue);}
+.stat-lbl{font-size:8px;font-family:var(--fm);color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+
+/* SEARCH */
+.search-bar{display:flex;gap:8px;margin-bottom:12px;}
+.search-in{flex:1;background:var(--s1);border:1px solid var(--border);color:var(--text);font-family:var(--ff);font-size:13px;padding:10px 13px;border-radius:9px;outline:none;}
+.search-in:focus{border-color:var(--blue);}
+.search-in::placeholder{color:var(--dim);}
+
+/* CATEGORY PILLS */
+.cat-pills{display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:14px;padding-bottom:4px;scrollbar-width:none;}
+.cat-pills::-webkit-scrollbar{display:none;}
+.cat-pill{background:var(--s1);border:1px solid var(--border);color:var(--sub);font-family:var(--fm);font-size:8px;letter-spacing:1px;padding:5px 10px;border-radius:20px;cursor:pointer;white-space:nowrap;transition:all .2s;}
+.cat-pill.active{background:rgba(77,124,255,.12);border-color:var(--blue);color:var(--blue);}
+
+/* SUBJECTS GRID */
+.subj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:20px;max-height:360px;overflow-y:auto;padding-right:2px;}
+@media(min-width:500px){.subj-grid{grid-template-columns:repeat(4,1fr);}}
+@media(min-width:700px){.subj-grid{grid-template-columns:repeat(6,1fr);}}
+.subj-grid::-webkit-scrollbar{width:3px;}
+.subj-grid::-webkit-scrollbar-thumb{background:var(--border);}
+.scard{background:var(--s1);border:1px solid var(--border);border-radius:9px;padding:10px 6px;cursor:pointer;transition:all .2s;text-align:center;}
+.scard:hover{border-color:var(--b2);transform:translateY(-1px);}
+.scard.sel{border-color:var(--blue);background:rgba(77,124,255,.1);}
+.scard .si{font-size:18px;display:block;margin-bottom:4px;}
+.scard .sn{font-family:var(--fm);font-size:8px;letter-spacing:.5px;color:var(--text);text-transform:uppercase;line-height:1.3;}
+.no-results{grid-column:1/-1;text-align:center;padding:30px;color:var(--dim);font-family:var(--fm);font-size:10px;letter-spacing:2px;}
+
+.start-big{width:100%;padding:15px;background:linear-gradient(135deg,var(--blue),var(--violet));border:none;border-radius:10px;color:#fff;font-family:var(--fb);font-size:20px;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;}
+
+/* SIMULATOR */
+.cfg-bar{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;align-items:center;}
+.cfg-sel{background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--fm);font-size:10px;padding:7px 9px;border-radius:7px;outline:none;cursor:pointer;}
+.cfg-sel:focus{border-color:var(--blue);}
+
+/* LANGUAGE DROPDOWN */
+.lang-wrap{position:relative;}
+.lang-display{background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--fm);font-size:10px;padding:7px 9px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:130px;}
+.lang-dd{position:absolute;top:calc(100% + 4px);left:0;width:250px;background:var(--s2);border:1px solid var(--border);border-radius:10px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none;}
+.lang-dd.open{display:block;}
+.lang-search{width:100%;background:var(--s1);border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--ff);font-size:12px;padding:9px 13px;outline:none;}
+.lang-list{max-height:180px;overflow-y:auto;padding:4px 0;}
+.lang-list::-webkit-scrollbar{width:3px;}
+.lang-list::-webkit-scrollbar-thumb{background:var(--border);}
+.lang-opt{padding:7px 13px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .1s;}
+.lang-opt:hover{background:var(--s1);}
+.lang-opt.sel{color:var(--blue);}
+
+.diff-pills{display:flex;gap:4px;}
+.dp{background:var(--s1);border:1px solid var(--border);color:var(--sub);font-family:var(--fm);font-size:8px;letter-spacing:1px;padding:5px 9px;border-radius:20px;cursor:pointer;transition:all .2s;}
+.dp.active{background:rgba(77,124,255,.15);border-color:var(--blue);color:var(--blue);}
+
+/* PHASE BAR */
+.phase-bar{display:flex;background:var(--s1);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.ph{flex:1;padding:7px 3px;text-align:center;font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);font-family:var(--fm);border-right:1px solid var(--border);transition:all .3s;}
+.ph:last-child{border-right:none;}
+.ph .pd{display:block;width:4px;height:4px;border-radius:50%;background:var(--dim);margin:0 auto 3px;}
+.ph.done{color:var(--green);}.ph.done .pd{background:var(--green);}
+.ph.cur{color:var(--yellow);}.ph.cur .pd{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}
+
+.prog-wrap{height:2px;background:var(--border);border-radius:2px;margin-bottom:16px;display:none;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--violet));width:0%;transition:width .5s;border-radius:2px;}
+
+/* SECTIONS */
+.sec-builder{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.nb-sec{background:var(--s1);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .2s;}
+.nb-sec:focus-within{border-color:rgba(77,124,255,.4);}
+.nb-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--s2);border-bottom:1px solid var(--border);}
+.nb-n{width:20px;height:20px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:9px;color:#fff;flex-shrink:0;}
+.nb-lbl{flex:1;background:transparent;border:none;color:var(--text);font-family:var(--fm);font-size:10px;letter-spacing:1px;outline:none;}
+.nb-lbl::placeholder{color:var(--dim);}
+.rm-sec{background:none;border:none;color:var(--dim);cursor:pointer;font-size:13px;padding:2px 4px;}
+.rm-sec:hover{color:var(--red);}
+.ta-wrap{position:relative;}
+.nb-ta{width:100%;background:transparent;border:none;color:var(--text);font-family:var(--ff);font-size:13px;font-weight:300;padding:10px 40px 10px 12px;resize:vertical;min-height:80px;outline:none;line-height:1.7;}
+.nb-ta::placeholder{color:var(--dim);}
+.mic-b{position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:50%;background:var(--s2);border:1px solid var(--border);color:var(--sub);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.mic-b:hover{border-color:var(--blue);color:var(--blue);}
+.mic-b.on{background:rgba(248,113,113,.15);border-color:var(--red);color:var(--red);animation:mp 1s infinite;}
+@keyframes mp{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.4)}50%{box-shadow:0 0 0 5px rgba(248,113,113,0)}}
+.ctag{font-family:var(--fm);font-size:9px;color:var(--cyan);padding:3px 12px 6px;display:none;}
+.add-sec-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:transparent;border:1px dashed var(--border);border-radius:8px;color:var(--dim);font-family:var(--fm);font-size:9px;letter-spacing:2px;padding:10px;cursor:pointer;transition:all .2s;width:100%;}
+.add-sec-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+/* MODE GRID */
+.mode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:12px 0;}
+@media(min-width:480px){.mode-grid{grid-template-columns:repeat(4,1fr);}}
+.mc{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px 7px;cursor:pointer;transition:all .2s;text-align:center;}
+.mc:hover{border-color:var(--b2);}.mc.sel{border-color:var(--blue);background:rgba(77,124,255,.08);}
+.mc .mi{font-size:17px;display:block;margin-bottom:3px;}
+.mc .mt{font-family:var(--fm);font-size:8px;letter-spacing:1px;color:var(--text);text-transform:uppercase;}
+.mc .md{font-size:8px;color:var(--sub);margin-top:2px;line-height:1.3;}
+
+.launch{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--violet));border:none;border-radius:9px;color:#fff;font-family:var(--fb);font-size:18px;letter-spacing:3px;cursor:pointer;transition:opacity .2s;margin-bottom:22px;position:relative;overflow:hidden;}
+.launch:disabled{opacity:.35;cursor:not-allowed;}
+
+/* CHAT */
+#chat{display:flex;flex-direction:column;gap:14px;}
+.msg{display:flex;gap:10px;animation:mi .4s cubic-bezier(.23,1,.32,1) both;}
+@keyframes mi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.av{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px;}
+.av-ai{background:linear-gradient(135deg,var(--blue),var(--violet));}
+.av-u{background:var(--s2);border:1px solid var(--border);}
+.bub{flex:1;background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:13px 15px;font-size:13px;line-height:1.8;font-weight:300;}
+.bub-ai{border-color:rgba(77,124,255,.2);}.bub-u{background:var(--s2);}
+.bub strong{color:var(--yellow);font-weight:500;}
+.bub .ok{color:var(--green);}.bub .bad{color:var(--red);}.bub .cod{font-family:var(--fm);font-size:11px;color:var(--cyan);}
+.choices{display:flex;flex-direction:column;gap:6px;margin-top:9px;}
+.cbtn{background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--ff);font-size:12px;font-weight:300;padding:9px 13px;border-radius:7px;cursor:pointer;text-align:left;transition:all .2s;}
+.cbtn:hover{border-color:var(--blue);}
+.cbtn.ok{border-color:var(--green);background:rgba(74,222,128,.06);color:var(--green);}
+.cbtn.bad{border-color:var(--red);background:rgba(248,113,113,.06);color:var(--red);}
+.cbtn:disabled{cursor:default;}
+.dots{display:flex;align-items:center;gap:4px;height:16px;}
+.dots span{width:4px;height:4px;background:var(--blue);border-radius:50%;animation:dp 1.2s infinite;}
+.dots span:nth-child(2){animation-delay:.2s;background:var(--violet);}
+.dots span:nth-child(3){animation-delay:.4s;background:var(--cyan);}
+@keyframes dp{0%,80%,100%{transform:scale(1);opacity:.6}40%{transform:scale(1.5);opacity:1}}
+
+#ans-area{margin-top:5px;}
+.ans-box{display:flex;gap:7px;background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:10px 12px;align-items:center;transition:border-color .2s;}
+.ans-box:focus-within{border-color:rgba(77,124,255,.4);}
+.ans-in{flex:1;background:transparent;border:none;color:var(--text);font-family:var(--ff);font-size:13px;font-weight:300;outline:none;}
+.ans-in::placeholder{color:var(--dim);}
+.mic-ans{width:28px;height:28px;border-radius:50%;background:var(--s2);border:1px solid var(--border);color:var(--sub);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+.mic-ans:hover{border-color:var(--blue);color:var(--blue);}
+.mic-ans.on{background:rgba(248,113,113,.12);border-color:var(--red);color:var(--red);animation:mp 1s infinite;}
+.send{background:var(--blue);border:none;color:#fff;font-family:var(--fb);font-size:12px;letter-spacing:2px;padding:7px 14px;border-radius:7px;cursor:pointer;flex-shrink:0;}
+.send:disabled{opacity:.35;cursor:not-allowed;}
+.end-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.ghost{background:transparent;border:1px solid var(--border);color:var(--sub);font-family:var(--fm);font-size:9px;letter-spacing:1.5px;padding:7px 13px;border-radius:7px;cursor:pointer;text-transform:uppercase;transition:all .2s;}
+.ghost:hover{border-color:var(--violet);color:var(--violet);}
+
+/* HISTORY */
+.page-title{font-family:var(--fb);font-size:26px;letter-spacing:2px;margin-bottom:18px;}
+.hcard{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:13px 15px;display:flex;align-items:center;gap:13px;margin-bottom:8px;}
+.hscore{font-family:var(--fb);font-size:24px;min-width:50px;text-align:center;}
+.htop{font-size:12px;font-weight:500;margin-bottom:2px;}
+.hmeta{font-size:10px;font-family:var(--fm);color:var(--sub);}
+.hempty{text-align:center;padding:50px;color:var(--dim);font-family:var(--fm);font-size:10px;letter-spacing:2px;}
+
+/* TEACHER */
+.teach-grid{display:grid;grid-template-columns:1fr;gap:16px;}
+@media(min-width:620px){.teach-grid{grid-template-columns:1fr 1fr;}}
+.tcard{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.tcard-title{font-family:var(--fb);font-size:18px;letter-spacing:2px;margin-bottom:10px;}
+.t-in{width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--ff);font-size:12px;font-weight:300;padding:8px 10px;border-radius:7px;outline:none;margin-bottom:8px;}
+.t-in:focus{border-color:var(--blue);}
+.t-ta{width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--ff);font-size:12px;font-weight:300;padding:8px 10px;border-radius:7px;outline:none;resize:vertical;min-height:80px;line-height:1.6;margin-bottom:8px;}
+.t-ta:focus{border-color:var(--blue);}
+.t-btn{background:linear-gradient(135deg,var(--blue),var(--violet));border:none;color:#fff;font-family:var(--fb);font-size:13px;letter-spacing:2px;padding:10px;border-radius:7px;cursor:pointer;width:100%;margin-bottom:6px;}
+.class-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+.stu-row{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:8px 11px;}
+.stu-n{flex:1;font-size:12px;}
+.stu-s{font-family:var(--fb);font-size:16px;}
+.sbadge{font-family:var(--fm);font-size:7px;letter-spacing:1px;padding:2px 6px;border-radius:20px;text-transform:uppercase;}
+.sbadge.g{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2);}
+.sbadge.m{background:rgba(251,191,36,.08);color:var(--yellow);border:1px solid rgba(251,191,36,.15);}
+.sbadge.l{background:rgba(248,113,113,.08);color:var(--red);border:1px solid rgba(248,113,113,.15);}
+
+/* CREATOR PANEL */
+.creator-panel{background:linear-gradient(135deg,rgba(245,158,11,.05),rgba(251,146,60,.05));border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:20px;margin-bottom:16px;}
+.creator-title{font-family:var(--fb);font-size:22px;letter-spacing:2px;background:linear-gradient(90deg,var(--gold),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;}
+.creator-sub{font-size:11px;color:var(--sub);margin-bottom:16px;}
+.creator-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(min-width:600px){.creator-grid{grid-template-columns:repeat(3,1fr);}}
+.c-feature{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:14px;cursor:pointer;transition:all .2s;}
+.c-feature:hover{border-color:var(--gold);background:rgba(245,158,11,.1);}
+.c-feature .cf-icon{font-size:22px;margin-bottom:6px;}
+.c-feature .cf-name{font-family:var(--fm);font-size:9px;letter-spacing:1px;color:var(--gold);text-transform:uppercase;margin-bottom:3px;}
+.c-feature .cf-desc{font-size:10px;color:var(--sub);line-height:1.4;}
+
+/* PROJECT CREATOR */
+.project-editor{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:14px;display:none;}
+.project-editor.open{display:block;}
+.proj-vars{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0;}
+.var-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px;}
+.var-label{font-family:var(--fm);font-size:9px;color:var(--sub);letter-spacing:1px;margin-bottom:5px;display:block;}
+.var-input{width:100%;background:transparent;border:none;color:var(--text);font-family:var(--fm);font-size:12px;outline:none;}
+.var-input::placeholder{color:var(--dim);}
+
+/* LIBRARY */
+.lib-search{width:100%;background:var(--s1);border:1px solid var(--border);color:var(--text);font-family:var(--ff);font-size:13px;padding:10px 13px;border-radius:9px;outline:none;margin-bottom:14px;}
+.lib-search:focus{border-color:var(--blue);}
+.lib-search::placeholder{color:var(--dim);}
+.lib-result{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;}
+.lib-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;}
+.lib-meta{font-size:10px;font-family:var(--fm);color:var(--sub);margin-bottom:8px;}
+.lib-body{font-size:12px;color:var(--sub);line-height:1.6;font-weight:300;}
+.lib-tabs{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
+.lib-tab{background:var(--s2);border:1px solid var(--border);color:var(--sub);font-family:var(--fm);font-size:8px;letter-spacing:1px;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .2s;}
+.lib-tab.active{border-color:var(--blue);color:var(--blue);}
+
+/* ACHIEVEMENTS */
+.achieve-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+@media(min-width:500px){.achieve-grid{grid-template-columns:repeat(3,1fr);}}
+.ach-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center;transition:all .2s;}
+.ach-card.unlocked{border-color:var(--gold);background:rgba(245,158,11,.06);}
+.ach-icon{font-size:24px;margin-bottom:6px;}
+.ach-name{font-family:var(--fm);font-size:9px;letter-spacing:1px;color:var(--text);text-transform:uppercase;margin-bottom:2px;}
+.ach-desc{font-size:9px;color:var(--sub);}
+.ach-card.locked{opacity:.4;}
+
+/* INTEREST DETECTOR */
+.interest-card{background:linear-gradient(135deg,rgba(34,211,238,.05),rgba(77,124,255,.05));border:1px solid rgba(34,211,238,.2);border-radius:12px;padding:16px;margin-bottom:12px;}
+.interest-title{font-family:var(--fb);font-size:16px;letter-spacing:2px;color:var(--cyan);margin-bottom:4px;}
+.interest-body{font-size:12px;color:var(--sub);line-height:1.6;}
+.interest-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+.itag{background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.2);color:var(--cyan);font-family:var(--fm);font-size:8px;letter-spacing:1px;padding:3px 8px;border-radius:20px;}
+
+/* UTIL */
+.lbl{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;margin-bottom:7px;display:block;}
+.section-ttl{font-family:var(--fm);font-size:9px;letter-spacing:3px;color:var(--blue);text-transform:uppercase;margin-bottom:10px;}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.btn-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;}
+.clr-btn{background:transparent;border:1px solid var(--border);color:var(--sub);font-family:var(--fm);font-size:8px;letter-spacing:2px;padding:6px 11px;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all .2s;}
+.clr-btn:hover{border-color:var(--red);color:var(--red);}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="app">
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">EduSim</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="go('home')">Inicio</button>
+    <button class="nav-tab" onclick="go('sim')">Simulador</button>
+    <button class="nav-tab" onclick="go('lib')">Biblioteca</button>
+    <button class="nav-tab" onclick="go('hist')">Historial</button>
+    <button class="nav-tab" onclick="go('teach')">Profesor</button>
+    <button class="nav-tab" onclick="go('creator')">⭐ Creador</button>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div class="screen visible" id="screen-home">
+<div class="inner">
+  <div class="hero">
+    <div class="hero-tag">▸ Universidad Digital · IA Integrada</div>
+    <div class="hero-title">EDUSIM<br>PRO</div>
+    <p class="hero-sub">150+ materias · 100+ idiomas · Simulaciones · Biblioteca científica · Modo Creador</p>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="st-ses">0</div><div class="stat-lbl">Sesiones</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-avg">—</div><div class="stat-lbl">Promedio</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-best">—</div><div class="stat-lbl">Mejor</div></div>
+  </div>
+
+  <!-- INTEREST DETECTOR -->
+  <div class="interest-card" id="interest-box" style="display:none">
+    <div class="interest-title">🔍 TU PERFIL DE INTERESES</div>
+    <div class="interest-body" id="interest-body"></div>
+    <div class="interest-tags" id="interest-tags"></div>
+  </div>
+
+  <div class="section-ttl">Busca tu materia</div>
+  <div class="search-bar">
+    <input class="search-in" id="subj-search" placeholder="Buscar materia..." oninput="filterSubjects()">
+  </div>
+  <div class="cat-pills" id="cat-pills"></div>
+  <div class="subj-grid" id="subj-grid"></div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="section-ttl" style="margin-top:4px;">Logros</div>
+  <div class="achieve-grid" id="achieve-grid"></div>
+
+  <div style="margin-top:16px;">
+    <button class="start-big" onclick="go('sim')">▶ COMENZAR SIMULACIÓN</button>
+  </div>
+</div>
+</div>
+
+<!-- SIMULATOR -->
+<div class="screen" id="screen-sim">
+<div class="inner" style="max-width:860px;">
+  <div class="cfg-bar">
+    <select class="cfg-sel" id="subj-sel" onchange="syncSubjSel()">
+      <option value="">— Materia —</option>
+    </select>
+    <div class="lang-wrap" id="lang-wrap">
+      <div class="lang-display" id="lang-display" onclick="toggleLangDD()">
+        <span id="lang-flag">🌐</span>
+        <span id="lang-label" style="flex:1">Español</span>
+        <span style="font-size:9px;color:var(--dim)">▾</span>
+      </div>
+      <div class="lang-dd" id="lang-dd">
+        <input class="lang-search" id="lang-search" placeholder="Buscar idioma..." oninput="filterLangs()">
+        <div class="lang-list" id="lang-list"></div>
+      </div>
+    </div>
+    <div class="diff-pills">
+      <button class="dp active" data-d="easy">Fácil</button>
+      <button class="dp" data-d="med">Medio</button>
+      <button class="dp" data-d="hard">Difícil</button>
+    </div>
+  </div>
+
+  <div class="phase-bar" id="phase-bar">
+    <div class="ph cur" data-p="0"><span class="pd"></span>Cuaderno</div>
+    <div class="ph" data-p="1"><span class="pd"></span>Narración</div>
+    <div class="ph" data-p="2"><span class="pd"></span>Preguntas</div>
+    <div class="ph" data-p="3"><span class="pd"></span>Evaluar</div>
+    <div class="ph" data-p="4"><span class="pd"></span>Resultado</div>
+  </div>
+  <div class="prog-wrap" id="prog-wrap"><div class="prog-fill" id="prog-fill"></div></div>
+
+  <div id="inp-zone">
+    <div class="sec-builder" id="secs"></div>
+    <button class="add-sec-btn" onclick="addSec()">＋ AGREGAR SECCIÓN</button>
+    <span class="lbl" style="margin-top:16px;">Modo</span>
+    <div class="mode-grid">
+      <div class="mc sel" data-m="video"><span class="mi">🎬</span><div class="mt">Narración</div><div class="md">Documental</div></div>
+      <div class="mc" data-m="multi"><span class="mi">🔘</span><div class="mt">Múltiple</div><div class="md">A/B/C/D</div></div>
+      <div class="mc" data-m="formulas"><span class="mi">📐</span><div class="mt">Fórmulas</div><div class="md">Problemas</div></div>
+      <div class="mc" data-m="debate"><span class="mi">💬</span><div class="mt">Explícame</div><div class="md">Tú explicas</div></div>
+    </div>
+    <button class="launch" id="launch-btn" onclick="launch()">▶ INICIAR SIMULACIÓN</button>
+  </div>
+  <div id="chat"></div>
+  <div id="ans-area"></div>
+</div>
+</div>
+
+<!-- LIBRARY -->
+<div class="screen" id="screen-lib">
+<div class="inner">
+  <div class="page-title">BIBLIOTECA</div>
+  <input class="lib-search" id="lib-search" placeholder="Buscar concepto, fórmula, materia..." oninput="searchLib()">
+  <div class="lib-tabs">
+    <button class="lib-tab active" onclick="setLibTab('teoria',this)">Teoría</button>
+    <button class="lib-tab" onclick="setLibTab('formulas',this)">Fórmulas</button>
+    <button class="lib-tab" onclick="setLibTab('ejemplos',this)">Ejemplos</button>
+    <button class="lib-tab" onclick="setLibTab('investigacion',this)">Investigación</button>
+  </div>
+  <div id="lib-results"></div>
+</div>
+</div>
+
+<!-- HISTORY -->
+<div class="screen" id="screen-hist">
+<div class="inner">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div class="page-title">HISTORIAL</div>
+    <button class="clr-btn" onclick="clearHist()">Borrar</button>
+  </div>
+  <div id="hist-list"></div>
+</div>
+</div>
+
+<!-- TEACHER -->
+<div class="screen" id="screen-teach">
+<div class="inner">
+  <div class="page-title" style="margin-bottom:16px;">MODO PROFESOR</div>
+  <div class="teach-grid">
+    <div class="tcard">
+      <div class="tcard-title">CREAR TAREA</div>
+      <span class="lbl">Nombre de la tarea</span>
+      <input class="t-in" id="exam-name" placeholder="Ej: Física — Cinemática">
+      <span class="lbl">Contenido del tema</span>
+      <textarea class="t-ta" id="exam-content" placeholder="Pega aquí el contenido..."></textarea>
+      <span class="lbl">Nº de preguntas</span>
+      <select class="cfg-sel" id="exam-q" style="width:100%;margin-bottom:10px;">
+        <option value="3">3 preguntas</option>
+        <option value="5" selected>5 preguntas</option>
+        <option value="10">10 preguntas</option>
+      </select>
+      <button class="t-btn" onclick="createExam()">GENERAR TAREA</button>
+    </div>
+    <div class="tcard">
+      <div class="tcard-title">SALÓN DE CLASES</div>
+      <span class="lbl">Agregar estudiante</span>
+      <input class="t-in" id="stu-in" placeholder="Nombre del estudiante">
+      <button class="t-btn" onclick="addStudent()">＋ AGREGAR</button>
+      <span class="lbl">Ranking del salón</span>
+      <div class="class-list" id="class-list"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CREATOR -->
+<div class="screen" id="screen-creator">
+<div class="inner">
+  <div class="creator-panel">
+    <div class="creator-title">⭐ MODO CREADOR</div>
+    <div class="creator-sub">Acceso sin restricciones a todas las herramientas avanzadas</div>
+    <div class="creator-grid">
+      <div class="c-feature" onclick="openCreatorTool('projects')">
+        <div class="cf-icon">🔬</div>
+        <div class="cf-name">Proyectos Libres</div>
+        <div class="cf-desc">Experimentos sin límite de complejidad. Genética, física, química.</div>
+      </div>
+      <div class="c-feature" onclick="openCreatorTool('editor')">
+        <div class="cf-icon">⚙️</div>
+        <div class="cf-name">Editor de Simulaciones</div>
+        <div class="cf-desc">Modifica variables físicas, químicas y biológicas. Crea escenarios únicos.</div>
+      </div>
+      <div class="c-feature" onclick="openCreatorTool('bank')">
+        <div class="cf-icon">📚</div>
+        <div class="cf-name">Banco de Recursos</div>
+        <div class="cf-desc">Acceso ilimitado a toda la biblioteca. Guarda todo sin restricción.</div>
+      </div>
+      <div class="c-feature" onclick="openCreatorTool('automation')">
+        <div class="cf-icon">🤖</div>
+        <div class="cf-name">Automatización</div>
+        <div class="cf-desc">Scripts y lógica para automatizar procesos dentro de simulaciones.</div>
+      </div>
+      <div class="c-feature" onclick="openCreatorTool('publish')">
+        <div class="cf-icon">🌐</div>
+        <div class="cf-name">Publicar y Colaborar</div>
+        <div class="cf-desc">Comparte proyectos con control total de permisos. Colaboración en tiempo real.</div>
+      </div>
+      <div class="c-feature" onclick="openCreatorTool('genetics')">
+        <div class="cf-icon">🧬</div>
+        <div class="cf-name">Simulador Genético</div>
+        <div class="cf-desc">Cruces genéticos entre organismos. Tablas de Punnett. Herencia.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVE TOOL AREA -->
+  <div id="creator-tool-area"></div>
+</div>
+</div>
+
+</div><!-- /app -->
+
+<!-- BG -->
+<script>
+(function(){
+  const c=document.getElementById('bg-canvas'),x=c.getContext('2d');
+  let W,H,p=[];
+  function r(){W=c.width=innerWidth;H=c.height=innerHeight;}
+  r();addEventListener('resize',r);
+  for(let i=0;i<80;i++)p.push({x:Math.random(),y:Math.random(),r:Math.random()*.8+.2,a:Math.random()*.6,da:(Math.random()-.5)*.004});
+  function d(){x.clearRect(0,0,W,H);p.forEach(s=>{s.a+=s.da;if(s.a<.05||s.a>.65)s.da*=-1;x.beginPath();x.arc(s.x*W,s.y*H,s.r,0,Math.PI*2);x.fillStyle=`rgba(140,150,255,${s.a})`;x.fill();});requestAnimationFrame(d);}
+  d();
+})();
+</script>
+
+<script>
+const API='https://api.anthropic.com/v1/messages';
+
+// ═══════════════════════
+// 150+ SUBJECTS
+// ═══════════════════════
+const CATS=['Todas','Física','Química','Biología','Astronomía','Matemáticas','Ingeniería','Tecnología','Ciencias Sociales','Salud','Arte','Idiomas','Investigación'];
+
+const SUBJECTS=[
+  // FÍSICA
+  {id:'fisica',cat:'Física',icon:'⚡',name:'Física General'},
+  {id:'movimiento',cat:'Física',icon:'🏃',name:'Movimiento'},
+  {id:'mecanica',cat:'Física',icon:'⚙️',name:'Mecánica'},
+  {id:'electricidad',cat:'Física',icon:'🔌',name:'Electricidad'},
+  {id:'ondas',cat:'Física',icon:'〜',name:'Ondas'},
+  {id:'termodinamica',cat:'Física',icon:'🌡️',name:'Termodinámica'},
+  {id:'optica',cat:'Física',icon:'🔭',name:'Óptica'},
+  {id:'fismod',cat:'Física',icon:'⚛️',name:'Física Moderna'},
+  {id:'quantum',cat:'Física',icon:'🌀',name:'Mecánica Cuántica'},
+  {id:'nuclear',cat:'Física',icon:'☢️',name:'Física Nuclear'},
+  {id:'astrofisica',cat:'Física',icon:'🌟',name:'Astrofísica'},
+  {id:'electromag',cat:'Física',icon:'🧲',name:'Electromagnetismo'},
+  {id:'fluidos',cat:'Física',icon:'💧',name:'Mecánica de Fluidos'},
+  // QUÍMICA
+  {id:'quimica',cat:'Química',icon:'🧪',name:'Química General'},
+  {id:'reacciones',cat:'Química',icon:'⚗️',name:'Reacciones Químicas'},
+  {id:'moleculas',cat:'Química',icon:'🔬',name:'Moléculas'},
+  {id:'organica',cat:'Química',icon:'🌿',name:'Química Orgánica'},
+  {id:'inorganica',cat:'Química',icon:'🧱',name:'Química Inorgánica'},
+  {id:'bioquimica',cat:'Química',icon:'💊',name:'Bioquímica'},
+  {id:'electroquim',cat:'Química',icon:'⚡',name:'Electroquímica'},
+  {id:'termoquim',cat:'Química',icon:'🔥',name:'Termoquímica'},
+  {id:'analitica',cat:'Química',icon:'📊',name:'Química Analítica'},
+  {id:'polimeros',cat:'Química',icon:'🧶',name:'Polímeros'},
+  // BIOLOGÍA
+  {id:'bio',cat:'Biología',icon:'🧬',name:'Biología General'},
+  {id:'ecosistemas',cat:'Biología',icon:'🌿',name:'Ecosistemas'},
+  {id:'genetica',cat:'Biología',icon:'🔬',name:'Genética'},
+  {id:'celular',cat:'Biología',icon:'🦠',name:'Biología Celular'},
+  {id:'evolucion',cat:'Biología',icon:'🦕',name:'Evolución'},
+  {id:'ecologia',cat:'Biología',icon:'🌍',name:'Ecología'},
+  {id:'botanica',cat:'Biología',icon:'🌱',name:'Botánica'},
+  {id:'zoologia',cat:'Biología',icon:'🐾',name:'Zoología'},
+  {id:'microbiologia',cat:'Biología',icon:'🦠',name:'Microbiología'},
+  {id:'inmunologia',cat:'Biología',icon:'🛡️',name:'Inmunología'},
+  {id:'neurociencia',cat:'Biología',icon:'🧠',name:'Neurociencia'},
+  {id:'paleontologia',cat:'Biología',icon:'🦴',name:'Paleontología'},
+  {id:'biotecnologia',cat:'Biología',icon:'🔭',name:'Biotecnología'},
+  // ASTRONOMÍA
+  {id:'astronomia',cat:'Astronomía',icon:'⭐',name:'Astronomía'},
+  {id:'planetas',cat:'Astronomía',icon:'🪐',name:'Planetas y Órbitas'},
+  {id:'cosmologia',cat:'Astronomía',icon:'🌌',name:'Cosmología'},
+  {id:'bigbang',cat:'Astronomía',icon:'💥',name:'Big Bang'},
+  {id:'sistsolr',cat:'Astronomía',icon:'☀️',name:'Sistema Solar'},
+  {id:'galaxias',cat:'Astronomía',icon:'🌀',name:'Galaxias'},
+  {id:'estrellas',cat:'Astronomía',icon:'✨',name:'Estrellas'},
+  {id:'agujeros',cat:'Astronomía',icon:'⚫',name:'Agujeros Negros'},
+  {id:'astroplanet',cat:'Astronomía',icon:'🔭',name:'Astronomía Planetaria'},
+  // MATEMÁTICAS
+  {id:'matematicas',cat:'Matemáticas',icon:'📐',name:'Matemáticas'},
+  {id:'algebra',cat:'Matemáticas',icon:'🔢',name:'Álgebra'},
+  {id:'geometria',cat:'Matemáticas',icon:'📏',name:'Geometría'},
+  {id:'calculo',cat:'Matemáticas',icon:'∫',name:'Cálculo'},
+  {id:'calculo2',cat:'Matemáticas',icon:'∂',name:'Cálculo Integral'},
+  {id:'probabilidad',cat:'Matemáticas',icon:'🎲',name:'Probabilidad'},
+  {id:'estadistica',cat:'Matemáticas',icon:'📊',name:'Estadística'},
+  {id:'trigonometria',cat:'Matemáticas',icon:'📐',name:'Trigonometría'},
+  {id:'lineal',cat:'Matemáticas',icon:'〰️',name:'Álgebra Lineal'},
+  {id:'discreta',cat:'Matemáticas',icon:'🔗',name:'Matemática Discreta'},
+  {id:'logica',cat:'Matemáticas',icon:'🧩',name:'Lógica Matemática'},
+  {id:'diffeq',cat:'Matemáticas',icon:'〜',name:'Ec. Diferenciales'},
+  {id:'optimizacion',cat:'Matemáticas',icon:'📈',name:'Optimización'},
+  {id:'finanzasmat',cat:'Matemáticas',icon:'💹',name:'Matemática Financiera'},
+  // INGENIERÍA
+  {id:'ing_mec',cat:'Ingeniería',icon:'⚙️',name:'Ing. Mecánica'},
+  {id:'ing_elec',cat:'Ingeniería',icon:'⚡',name:'Ing. Eléctrica'},
+  {id:'ing_elecn',cat:'Ingeniería',icon:'🔌',name:'Ing. Electrónica'},
+  {id:'ing_civil',cat:'Ingeniería',icon:'🏗️',name:'Ing. Civil'},
+  {id:'ing_aero',cat:'Ingeniería',icon:'🚀',name:'Ing. Aeroespacial'},
+  {id:'ing_ind',cat:'Ingeniería',icon:'🏭',name:'Ing. Industrial'},
+  {id:'ing_quim',cat:'Ingeniería',icon:'⚗️',name:'Ing. Química'},
+  {id:'ing_bio',cat:'Ingeniería',icon:'🫀',name:'Ing. Biomédica'},
+  {id:'ing_amb',cat:'Ingeniería',icon:'🌿',name:'Ing. Ambiental'},
+  {id:'ing_tele',cat:'Ingeniería',icon:'📡',name:'Ing. Telecomunicaciones'},
+  {id:'ing_ctrl',cat:'Ingeniería',icon:'🎛️',name:'Control Automático'},
+  {id:'ing_meca',cat:'Ingeniería',icon:'🤖',name:'Mecatrónica'},
+  {id:'robotica',cat:'Ingeniería',icon:'🦾',name:'Robótica'},
+  {id:'ing_naval',cat:'Ingeniería',icon:'🚢',name:'Ing. Naval'},
+  {id:'circuitos',cat:'Ingeniería',icon:'🔋',name:'Circuitos'},
+  {id:'materiales',cat:'Ingeniería',icon:'🔩',name:'Ciencia de Materiales'},
+  // TECNOLOGÍA
+  {id:'programacion',cat:'Tecnología',icon:'💻',name:'Programación'},
+  {id:'ia',cat:'Tecnología',icon:'🧠',name:'Inteligencia Artificial'},
+  {id:'ml',cat:'Tecnología',icon:'📈',name:'Machine Learning'},
+  {id:'python',cat:'Tecnología',icon:'🐍',name:'Python'},
+  {id:'web',cat:'Tecnología',icon:'🌐',name:'Desarrollo Web'},
+  {id:'bd',cat:'Tecnología',icon:'🗄️',name:'Bases de Datos'},
+  {id:'algo',cat:'Tecnología',icon:'🔄',name:'Algoritmos'},
+  {id:'redes',cat:'Tecnología',icon:'🔗',name:'Redes'},
+  {id:'so',cat:'Tecnología',icon:'🖥️',name:'Sist. Operativos'},
+  {id:'ciberseg',cat:'Tecnología',icon:'🔐',name:'Ciberseguridad'},
+  {id:'cloud',cat:'Tecnología',icon:'☁️',name:'Cloud Computing'},
+  {id:'datos',cat:'Tecnología',icon:'📊',name:'Ciencia de Datos'},
+  {id:'cripto',cat:'Tecnología',icon:'🔒',name:'Criptografía'},
+  {id:'simcomp',cat:'Tecnología',icon:'🖥️',name:'Simulación Computacional'},
+  // CIENCIAS SOCIALES
+  {id:'historia',cat:'Ciencias Sociales',icon:'📜',name:'Historia'},
+  {id:'geografia',cat:'Ciencias Sociales',icon:'🌍',name:'Geografía'},
+  {id:'economia',cat:'Ciencias Sociales',icon:'💹',name:'Economía'},
+  {id:'sociologia',cat:'Ciencias Sociales',icon:'👥',name:'Sociología'},
+  {id:'psicologia',cat:'Ciencias Sociales',icon:'🧠',name:'Psicología'},
+  {id:'filosofia',cat:'Ciencias Sociales',icon:'🤔',name:'Filosofía'},
+  {id:'antropologia',cat:'Ciencias Sociales',icon:'🏺',name:'Antropología'},
+  {id:'politica',cat:'Ciencias Sociales',icon:'🏛️',name:'Ciencia Política'},
+  {id:'etica',cat:'Ciencias Sociales',icon:'⚖️',name:'Ética'},
+  {id:'comunicacion',cat:'Ciencias Sociales',icon:'📢',name:'Comunicación'},
+  {id:'arqueologia',cat:'Ciencias Sociales',icon:'🗿',name:'Arqueología'},
+  {id:'intrel',cat:'Ciencias Sociales',icon:'🤝',name:'Relaciones Internacionales'},
+  {id:'derecho',cat:'Ciencias Sociales',icon:'⚖️',name:'Derecho'},
+  // SALUD
+  {id:'anatomia',cat:'Salud',icon:'🫀',name:'Anatomía'},
+  {id:'fisiologia',cat:'Salud',icon:'🩺',name:'Fisiología'},
+  {id:'farmacologia',cat:'Salud',icon:'💊',name:'Farmacología'},
+  {id:'patologia',cat:'Salud',icon:'🔬',name:'Patología'},
+  {id:'nutricion',cat:'Salud',icon:'🥗',name:'Nutrición'},
+  {id:'saludpub',cat:'Salud',icon:'🏥',name:'Salud Pública'},
+  {id:'medicina',cat:'Salud',icon:'👨‍⚕️',name:'Medicina'},
+  {id:'enfermeria',cat:'Salud',icon:'👩‍⚕️',name:'Enfermería'},
+  // ARTE
+  {id:'literatura',cat:'Arte',icon:'📖',name:'Literatura'},
+  {id:'musica',cat:'Arte',icon:'🎵',name:'Música'},
+  {id:'artes_vis',cat:'Arte',icon:'🎨',name:'Artes Visuales'},
+  {id:'cine',cat:'Arte',icon:'🎬',name:'Cine'},
+  {id:'teatro',cat:'Arte',icon:'🎭',name:'Teatro'},
+  {id:'danza',cat:'Arte',icon:'💃',name:'Danza'},
+  {id:'diseno',cat:'Arte',icon:'✏️',name:'Diseño Gráfico'},
+  {id:'arquitectura',cat:'Arte',icon:'🏛️',name:'Arquitectura'},
+  {id:'fotografia',cat:'Arte',icon:'📷',name:'Fotografía'},
+  // IDIOMAS
+  {id:'espanol',cat:'Idiomas',icon:'🇪🇸',name:'Español'},
+  {id:'ingles',cat:'Idiomas',icon:'🇺🇸',name:'Inglés'},
+  {id:'frances',cat:'Idiomas',icon:'🇫🇷',name:'Francés'},
+  {id:'aleman',cat:'Idiomas',icon:'🇩🇪',name:'Alemán'},
+  {id:'chino',cat:'Idiomas',icon:'🇨🇳',name:'Chino Mandarín'},
+  {id:'japones',cat:'Idiomas',icon:'🇯🇵',name:'Japonés'},
+  {id:'portugues',cat:'Idiomas',icon:'🇧🇷',name:'Portugués'},
+  {id:'arabe',cat:'Idiomas',icon:'🇸🇦',name:'Árabe'},
+  {id:'ruso',cat:'Idiomas',icon:'🇷🇺',name:'Ruso'},
+  // INVESTIGACIÓN
+  {id:'metcient',cat:'Investigación',icon:'🔬',name:'Método Científico'},
+  {id:'datanalyis',cat:'Investigación',icon:'📊',name:'Análisis de Datos'},
+  {id:'disexp',cat:'Investigación',icon:'🧪',name:'Diseño Experimental'},
+  {id:'pubresult',cat:'Investigación',icon:'📝',name:'Publicación de Resultados'},
+  {id:'estadavanz',cat:'Investigación',icon:'📈',name:'Estadística Avanzada'},
+];
+
+// ═══════════════════════
+// 100+ LANGUAGES
+// ═══════════════════════
+const LANGUAGES=[
+  {code:'es',flag:'🇪🇸',name:'Español'},
+  {code:'en',flag:'🇺🇸',name:'Inglés / English'},
+  {code:'pt',flag:'🇧🇷',name:'Português'},
+  {code:'fr',flag:'🇫🇷',name:'Français'},
+  {code:'de',flag:'🇩🇪',name:'Deutsch'},
+  {code:'it',flag:'🇮🇹',name:'Italiano'},
+  {code:'zh',flag:'🇨🇳',name:'Chino Mandarín'},
+  {code:'ja',flag:'🇯🇵',name:'日本語 Japonés'},
+  {code:'ko',flag:'🇰🇷',name:'한국어 Coreano'},
+  {code:'ar',flag:'🇸🇦',name:'العربية Árabe'},
+  {code:'ru',flag:'🇷🇺',name:'Русский Ruso'},
+  {code:'hi',flag:'🇮🇳',name:'हिन्दी Hindi'},
+  {code:'bn',flag:'🇧🇩',name:'বাংলা Bengalí'},
+  {code:'ur',flag:'🇵🇰',name:'اردو Urdu'},
+  {code:'pa',flag:'🇮🇳',name:'ਪੰਜਾਬੀ Punjabí'},
+  {code:'vi',flag:'🇻🇳',name:'Tiếng Việt Vietnamita'},
+  {code:'th',flag:'🇹🇭',name:'ภาษาไทย Tailandés'},
+  {code:'ms',flag:'🇲🇾',name:'Bahasa Melayu Malayo'},
+  {code:'id',flag:'🇮🇩',name:'Bahasa Indonesia'},
+  {code:'tl',flag:'🇵🇭',name:'Filipino / Tagalo'},
+  {code:'fa',flag:'🇮🇷',name:'فارسی Persa'},
+  {code:'he',flag:'🇮🇱',name:'עברית Hebreo'},
+  {code:'el',flag:'🇬🇷',name:'Ελληνικά Griego'},
+  {code:'nl',flag:'🇳🇱',name:'Nederlands Holandés'},
+  {code:'sv',flag:'🇸🇪',name:'Svenska Sueco'},
+  {code:'no',flag:'🇳🇴',name:'Norsk Noruego'},
+  {code:'da',flag:'🇩🇰',name:'Dansk Danés'},
+  {code:'fi',flag:'🇫🇮',name:'Suomi Finés'},
+  {code:'pl',flag:'🇵🇱',name:'Polski Polaco'},
+  {code:'cs',flag:'🇨🇿',name:'Čeština Checo'},
+  {code:'sk',flag:'🇸🇰',name:'Slovenčina Eslovaco'},
+  {code:'hu',flag:'🇭🇺',name:'Magyar Húngaro'},
+  {code:'ro',flag:'🇷🇴',name:'Română Rumano'},
+  {code:'bg',flag:'🇧🇬',name:'Български Búlgaro'},
+  {code:'sr',flag:'🇷🇸',name:'Српски Serbio'},
+  {code:'hr',flag:'🇭🇷',name:'Hrvatski Croata'},
+  {code:'bs',flag:'🇧🇦',name:'Bosanski Bosnio'},
+  {code:'mk',flag:'🇲🇰',name:'Македонски Macedonio'},
+  {code:'sq',flag:'🇦🇱',name:'Shqip Albanés'},
+  {code:'ka',flag:'🇬🇪',name:'ქართული Georgiano'},
+  {code:'hy',flag:'🇦🇲',name:'Հայերեն Armenio'},
+  {code:'kk',flag:'🇰🇿',name:'Қазақша Kazajo'},
+  {code:'ky',flag:'🇰🇬',name:'Кыргызча Kirguís'},
+  {code:'tk',flag:'🇹🇲',name:'Türkmençe Turcomano'},
+  {code:'uz',flag:'🇺🇿',name:'Oʻzbekcha Uzbeko'},
+  {code:'tg',flag:'🇹🇯',name:'Тоҷикӣ Tayiko'},
+  {code:'mn',flag:'🇲🇳',name:'Монгол Mongol'},
+  {code:'sw',flag:'🇰🇪',name:'Kiswahili Swahili'},
+  {code:'zu',flag:'🇿🇦',name:'isiZulu Zulú'},
+  {code:'af',flag:'🇿🇦',name:'Afrikaans Afrikáans'},
+  {code:'so',flag:'🇸🇴',name:'Soomaali Somalí'},
+  {code:'am',flag:'🇪🇹',name:'አማርኛ Amhárico'},
+  {code:'om',flag:'🇪🇹',name:'Afaan Oromoo Oromo'},
+  {code:'yo',flag:'🇳🇬',name:'Yorùbá'},
+  {code:'ig',flag:'🇳🇬',name:'Igbo'},
+  {code:'ha',flag:'🇳🇬',name:'Hausa'},
+  {code:'st',flag:'🇿🇦',name:'Sesotho'},
+  {code:'qu',flag:'🇵🇪',name:'Quechua'},
+  {code:'ay',flag:'🇧🇴',name:'Aymara'},
+  {code:'gn',flag:'🇵🇾',name:'Guaraní'},
+  {code:'nah',flag:'🇲🇽',name:'Nāhuatl Náhuatl'},
+  {code:'yua',flag:'🇲🇽',name:'Maya Yucateco'},
+  {code:'map',flag:'🇨🇱',name:'Mapudungun'},
+  {code:'iku',flag:'🇨🇦',name:'Inuktitut'},
+  {code:'chr',flag:'🇺🇸',name:'ᏣᎳᎩ Cheroqui'},
+  {code:'my',flag:'🇲🇲',name:'မြန်မာ Birmano'},
+  {code:'km',flag:'🇰🇭',name:'ខ្មែរ Jemer'},
+  {code:'lo',flag:'🇱🇦',name:'ລາວ Laosiano'},
+  {code:'bo',flag:'🏳️',name:'བོད་ཡིག Tibetano'},
+  {code:'ug',flag:'🇨🇳',name:'ئۇيغۇرچە Uigur'},
+  {code:'mg',flag:'🇲🇬',name:'Malagasy Malgache'},
+  {code:'si',flag:'🇱🇰',name:'සිංහල Cingalés'},
+  {code:'ta',flag:'🇮🇳',name:'தமிழ் Tamil'},
+  {code:'te',flag:'🇮🇳',name:'తెలుగు Telugu'},
+  {code:'kn',flag:'🇮🇳',name:'ಕನ್ನಡ Canarés'},
+  {code:'ml',flag:'🇮🇳',name:'മലയാളം Malayalam'},
+  {code:'mr',flag:'🇮🇳',name:'मराठी Marathi'},
+  {code:'gu',flag:'🇮🇳',name:'ગુજરાતી Gujarati'},
+  {code:'sd',flag:'🇵🇰',name:'سنڌي Sindhi'},
+  {code:'ps',flag:'🇦🇫',name:'پښتو Pashto'},
+  {code:'ne',flag:'🇳🇵',name:'नेपाली Nepalí'},
+  {code:'sa',flag:'🇮🇳',name:'संस्कृत Sánscrito'},
+  {code:'ca',flag:'🏳️',name:'Català Catalán'},
+  {code:'gl',flag:'🏳️',name:'Galego Gallego'},
+  {code:'eu',flag:'🏳️',name:'Euskara Euskera'},
+  {code:'cy',flag:'🏴󠁧󠁢󠁷󠁬󠁳󠁿',name:'Cymraeg Galés'},
+  {code:'ga',flag:'🇮🇪',name:'Gaeilge Irlandés'},
+  {code:'gd',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',name:'Gàidhlig Gaélico Escocés'},
+  {code:'br',flag:'🏳️',name:'Brezhoneg Bretón'},
+  {code:'mt',flag:'🇲🇹',name:'Malti Maltés'},
+  {code:'lb',flag:'🇱🇺',name:'Lëtzebuergesch Luxemburgués'},
+  {code:'la',flag:'🏛️',name:'Latina Latín'},
+  {code:'eo',flag:'🌍',name:'Esperanto'},
+  {code:'az',flag:'🇦🇿',name:'Azərbaycan Azerbaiyano'},
+  {code:'lt',flag:'🇱🇹',name:'Lietuvių Lituano'},
+  {code:'lv',flag:'🇱🇻',name:'Latviešu Letón'},
+  {code:'et',flag:'🇪🇪',name:'Eesti Estonio'},
+  {code:'is',flag:'🇮🇸',name:'Íslenska Islandés'},
+  {code:'tr',flag:'🇹🇷',name:'Türkçe Turco'},
+  {code:'uk',flag:'🇺🇦',name:'Українська Ucraniano'},
+  {code:'be',flag:'🇧🇾',name:'Беларуская Bielorruso'},
+  {code:'sl',flag:'🇸🇮',name:'Slovenščina Esloveno'},
+];
+
+// ACHIEVEMENTS
+const ACHIEVEMENTS=[
+  {id:'first',icon:'🚀',name:'Primera Sesión',desc:'Completaste tu primera simulación',req:1},
+  {id:'five',icon:'⭐',name:'Estudiante',desc:'5 sesiones completadas',req:5},
+  {id:'ten',icon:'🔥',name:'Constante',desc:'10 sesiones completadas',req:10},
+  {id:'perfect',icon:'💎',name:'Perfecto',desc:'100% en una sesión',req:0},
+  {id:'polyglot',icon:'🌍',name:'Políglota',desc:'Estudia en 3 idiomas distintos',req:0},
+  {id:'scientist',icon:'🔬',name:'Científico',desc:'Completa 5 materias distintas',req:0},
+];
+
+// LIBRARY DATA
+const LIB_DATA={
+  teoria:[
+    {title:'Big Bang',subj:'Cosmología',body:'El universo comenzó hace 13,800 millones de años en un estado de densidad y temperatura infinitas. La expansión continúa hasta hoy medida por la constante de Hubble.'},
+    {title:'Leyes de Newton',subj:'Física',body:'Primera ley: un objeto en reposo permanece en reposo. Segunda ley: F = ma. Tercera ley: a toda acción corresponde una reacción igual y opuesta.'},
+    {title:'Teoría de la Evolución',subj:'Biología',body:'Propuesta por Darwin, establece que las especies cambian a través del tiempo mediante selección natural. Los individuos mejor adaptados sobreviven y se reproducen.'},
+    {title:'Tabla Periódica',subj:'Química',body:'Organiza los 118 elementos por número atómico, configuración electrónica y propiedades químicas. Períodos horizontales y grupos verticales con propiedades similares.'},
+    {title:'Mecánica Cuántica',subj:'Física Moderna',body:'Describe el comportamiento de partículas subatómicas. El principio de incertidumbre de Heisenberg establece que no podemos conocer simultáneamente posición y momento con precisión arbitraria.'},
+    {title:'ADN y Genética',subj:'Biología',body:'El ADN contiene las instrucciones genéticas. Formado por cuatro bases: adenina, timina, citosina y guanina. Los genes codifican proteínas que determinan características.'},
+  ],
+  formulas:[
+    {title:'E = mc²',subj:'Física Relativista',body:'Energía igual a masa por velocidad de la luz al cuadrado. Einstein 1905. Demuestra la equivalencia entre masa y energía.'},
+    {title:'F = ma',subj:'Mecánica Clásica',body:'Fuerza igual a masa por aceleración. Segunda Ley de Newton. Unidad: Newton (N = kg·m/s²).'},
+    {title:'Ley de Hubble: v = H₀·d',subj:'Cosmología',body:'Velocidad de alejamiento de galaxias proporcional a la distancia. H₀ ≈ 70 km/s/Mpc. Base de la expansión del universo.'},
+    {title:'PV = nRT',subj:'Química/Termodinámica',body:'Ley del gas ideal. Presión por Volumen igual a moles por constante de gas por Temperatura. R = 8.314 J/(mol·K).'},
+    {title:'Ec. de Schrödinger',subj:'Mecánica Cuántica',body:'iℏ∂ψ/∂t = Hψ. Describe la evolución temporal de un sistema cuántico. ψ es la función de onda.'},
+    {title:'ΔG = ΔH - TΔS',subj:'Termodinámica',body:'Energía libre de Gibbs. Si ΔG < 0, la reacción es espontánea. ΔH entalpía, T temperatura, ΔS entropía.'},
+  ],
+  ejemplos:[
+    {title:'Movimiento Proyectil',subj:'Física',body:'Una pelota lanzada horizontalmente a 20 m/s desde 45m de altura. Tiempo de caída: t=√(2h/g)=3s. Alcance horizontal: x=v·t=60m.'},
+    {title:'Reacción de Combustión',subj:'Química',body:'CH₄ + 2O₂ → CO₂ + 2H₂O. El metano (gas natural) reacciona con oxígeno produciendo dióxido de carbono y agua.'},
+    {title:'Cruce Genético',subj:'Genética',body:'Mendel: Aa × Aa → 1AA:2Aa:1aa. Fenotipo: 3 dominantes : 1 recesivo. Base de la herencia genética.'},
+    {title:'Órbita Circular',subj:'Astronomía',body:'La Luna orbita la Tierra a 384,400 km. Velocidad orbital: v=√(GM/r)≈1.02 km/s. Período: 27.3 días.'},
+  ],
+  investigacion:[
+    {title:'Método Científico',subj:'Investigación',body:'1. Observación. 2. Pregunta. 3. Hipótesis. 4. Experimento. 5. Análisis. 6. Conclusión. 7. Publicación. Base de toda investigación científica.'},
+    {title:'Diseño Experimental',subj:'Investigación',body:'Variable independiente (causa), dependiente (efecto), control (constante). Grupo experimental vs grupo control. Repetición para validez estadística.'},
+    {title:'Análisis de Datos',subj:'Investigación',body:'Media, mediana, moda, desviación estándar. Pruebas de hipótesis: t-Student, Chi-cuadrado. Nivel de significancia p < 0.05.'},
+  ]
+};
+
+// ═══════════════════════
+// STATE
+// ═══════════════════════
+let selSubject='',selCat='Todas',simMode='video',difficulty='easy';
+let simLang={code:'es',flag:'🇪🇸',name:'Español'};
+let hist_=[],sysP='',phase=0,qC=0,totalQ=0;
+let activeRec=null,activeMicEl=null;
+let students=JSON.parse(localStorage.getItem('es_stu')||'[]');
+let libTab='teoria';
+let interestMap={};
+
+// VOICE FIXES
+const SCI_FIXES=[
+  [/\bley de (who|ju|hú|hu)\b/gi,'Ley de Hubble'],
+  [/\b(big ban|big van|bic ban)\b/gi,'Big Bang'],
+  [/\be igual a m ?c (cuadrado|2)\b/gi,'E = mc²'],
+  [/\badn\b/gi,'ADN'],[/\barn\b/gi,'ARN'],
+  [/\bhubble\b/gi,'Hubble'],[/\beinstein\b/gi,'Einstein'],
+  [/\bnewton\b/gi,'Newton'],[/\bkepler\b/gi,'Kepler'],
+];
+function fixTerms(t){let o=t,f=[];SCI_FIXES.forEach(([p,r])=>{const b=o;o=o.replace(p,r);if(o!==b)f.push(r);});return{text:o,fixed:f};}
+
+// ═══════════════════════
+// ROUTING
+// ═══════════════════════
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('visible'));
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',['home','sim','lib','hist','teach','creator'][i]===id));
+  document.getElementById('screen-'+id).classList.add('visible');
+  if(id==='hist')renderHist();
+  if(id==='teach')renderClass();
+  if(id==='home'){buildCats();filterSubjects();updateStats();renderAchievements();detectInterests();}
+  if(id==='lib'){searchLib();}
+}
+
+// ═══════════════════════
+// HOME
+// ═══════════════════════
+function buildCats(){
+  document.getElementById('cat-pills').innerHTML=CATS.map(c=>`<button class="cat-pill${c===selCat?' active':''}" onclick="selectCat('${c}')">${c}</button>`).join('');
+  buildSubjSel();
+}
+function selectCat(c){selCat=c;document.querySelectorAll('.cat-pill').forEach(p=>p.classList.toggle('active',p.textContent===c));filterSubjects();}
+function filterSubjects(){
+  const q=(document.getElementById('subj-search')||{value:''}).value.toLowerCase();
+  const grid=document.getElementById('subj-grid');
+  let list=SUBJECTS.filter(s=>{
+    const mc=selCat==='Todas'||s.cat===selCat;
+    const mq=!q||s.name.toLowerCase().includes(q)||s.cat.toLowerCase().includes(q);
+    return mc&&mq;
+  });
+  if(!list.length){grid.innerHTML='<div class="no-results">Sin resultados</div>';return;}
+  grid.innerHTML=list.map(s=>`<div class="scard${selSubject===s.id?' sel':''}" onclick="pickSubj('${s.id}')"><span class="si">${s.icon}</span><div class="sn">${s.name}</div></div>`).join('');
+}
+function pickSubj(id){
+  selSubject=id;
+  document.querySelectorAll('.scard').forEach(c=>{
+    try{c.classList.toggle('sel',c.getAttribute('onclick').includes("'"+id+"'"));}catch(e){}
+  });
+  const sel=document.getElementById('subj-sel');if(sel)sel.value=id;
+  // track interest
+  interestMap[id]=(interestMap[id]||0)+1;
+  localStorage.setItem('es_interests',JSON.stringify(interestMap));
+}
+function buildSubjSel(){
+  const sel=document.getElementById('subj-sel');
+  sel.innerHTML='<option value="">— Materia —</option>'+SUBJECTS.map(s=>`<option value="${s.id}">${s.icon} ${s.name}</option>`).join('');
+  if(selSubject)sel.value=selSubject;
+}
+function syncSubjSel(){selSubject=document.getElementById('subj-sel').value;}
+
+function updateStats(){
+  const h=JSON.parse(localStorage.getItem('es_hist')||'[]');
+  document.getElementById('st-ses').textContent=h.length;
+  if(h.length){
+    const sc=h.map(x=>x.pct).filter(x=>x!==null);
+    document.getElementById('st-avg').textContent=sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length)+'%':'—';
+    document.getElementById('st-best').textContent=sc.length?Math.max(...sc)+'%':'—';
+  }
+}
+
+// ═══════════════════════
+// INTEREST DETECTOR
+// ═══════════════════════
+function detectInterests(){
+  interestMap=JSON.parse(localStorage.getItem('es_interests')||'{}');
+  const hist=JSON.parse(localStorage.getItem('es_hist')||'[]');
+  if(!Object.keys(interestMap).length&&!hist.length)return;
+  const box=document.getElementById('interest-box');
+  const body=document.getElementById('interest-body');
+  const tags=document.getElementById('interest-tags');
+  // top subjects
+  const sorted=Object.entries(interestMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(!sorted.length)return;
+  const topSubjs=sorted.map(([id])=>SUBJECTS.find(s=>s.id===id)).filter(Boolean);
+  // detect category clusters
+  const catCount={};
+  topSubjs.forEach(s=>{catCount[s.cat]=(catCount[s.cat]||0)+1;});
+  const topCat=Object.entries(catCount).sort((a,b)=>b[1]-a[1])[0];
+  box.style.display='block';
+  body.textContent=`Basado en tu actividad, parece que te interesa ${topCat?topCat[0]:'el estudio'}. ${topSubjs.length>2?'Podrías explorar carreras en esta área.':''}`;
+  tags.innerHTML=topSubjs.map(s=>`<div class="itag">${s.icon} ${s.name}</div>`).join('');
+}
+
+// ═══════════════════════
+// ACHIEVEMENTS
+// ═══════════════════════
+function renderAchievements(){
+  const h=JSON.parse(localStorage.getItem('es_hist')||'[]');
+  const sessions=h.length;
+  const hasPerfect=h.some(x=>x.pct===100);
+  const langs=new Set(h.map(x=>x.lang)).size;
+  const subjs=new Set(h.map(x=>x.subject)).size;
+  const grid=document.getElementById('achieve-grid');
+  grid.innerHTML=ACHIEVEMENTS.map(a=>{
+    let unlocked=false;
+    if(a.id==='first')unlocked=sessions>=1;
+    else if(a.id==='five')unlocked=sessions>=5;
+    else if(a.id==='ten')unlocked=sessions>=10;
+    else if(a.id==='perfect')unlocked=hasPerfect;
+    else if(a.id==='polyglot')unlocked=langs>=3;
+    else if(a.id==='scientist')unlocked=subjs>=5;
+    return `<div class="ach-card ${unlocked?'unlocked':'locked'}">
+      <div class="ach-icon">${a.icon}</div>
+      <div class="ach-name">${a.name}</div>
+      <div class="ach-desc">${a.desc}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════
+// LANGUAGE DROPDOWN
+// ═══════════════════════
+function buildLangList(q=''){
+  const list=document.getElementById('lang-list');
+  const f=LANGUAGES.filter(l=>!q||l.name.toLowerCase().includes(q.toLowerCase()));
+  list.innerHTML=f.slice(0,60).map(l=>`<div class="lang-opt${simLang.code===l.code?' sel':''}" onclick="pickLang('${l.code}')"><span>${l.flag}</span>${l.name}</div>`).join('');
+}
+function filterLangs(){buildLangList(document.getElementById('lang-search').value);}
+function pickLang(code){
+  const l=LANGUAGES.find(x=>x.code===code);if(!l)return;
+  simLang=l;
+  document.getElementById('lang-flag').textContent=l.flag;
+  document.getElementById('lang-label').textContent=l.name.split(' ')[0];
+  toggleLangDD(false);
+}
+function toggleLangDD(force){
+  const dd=document.getElementById('lang-dd');
+  const open=force!==undefined?force:!dd.classList.contains('open');
+  dd.classList.toggle('open',open);
+  if(open){buildLangList();setTimeout(()=>document.getElementById('lang-search').focus(),50);}
+}
+document.addEventListener('click',e=>{if(!document.getElementById('lang-wrap').contains(e.target))toggleLangDD(false);});
+
+// ═══════════════════════
+// VOICE
+// ═══════════════════════
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function stopMic(){
+  if(activeRec){try{activeRec.stop();}catch(e){}activeRec=null;}
+  if(activeMicEl){activeMicEl.classList.remove('on');activeMicEl.textContent='🎤';activeMicEl=null;}
+}
+function toggleMic(btn,ta,ctag){
+  if(!SR){alert('Usa Chrome para voz.');return;}
+  if(activeMicEl===btn){stopMic();return;}
+  stopMic();
+  const r=new SR();r.lang='es-ES';r.continuous=true;r.interimResults=true;
+  let final=ta.value||'';
+  r.onresult=e=>{let im='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal){const{text,fixed}=fixTerms(e.results[i][0].transcript);final+=text+' ';if(fixed.length&&ctag){ctag.style.display='block';ctag.textContent='✦ '+fixed.join(', ');setTimeout(()=>ctag.style.display='none',3000);}}else im+=e.results[i][0].transcript;}ta.value=final+im;};
+  r.onerror=()=>stopMic();
+  r.onend=()=>{if(activeMicEl===btn){btn.classList.remove('on');btn.textContent='🎤';activeMicEl=null;}};
+  r.start();activeRec=r;activeMicEl=btn;btn.classList.add('on');btn.textContent='⏹';
+}
+
+// ═══════════════════════
+// SECTIONS
+// ═══════════════════════
+const DEF_SECS=[
+  {l:'FUNDAMENTOS',p:'Dicta o escribe el contenido de esta sección...'},
+  {l:'FÓRMULAS',p:'Dicta o escribe fórmulas y ecuaciones...'},
+  {l:'EJEMPLOS/EVIDENCIAS',p:'Dicta o escribe ejemplos y evidencias...'},
+];
+function addSec(label='',ph='Dicta o escribe...'){
+  const c=document.getElementById('secs');const n=c.children.length+1;const id='s'+Date.now()+n;
+  const d=document.createElement('div');d.className='nb-sec';
+  d.innerHTML=`<div class="nb-hdr"><div class="nb-n">${n}</div><input class="nb-lbl" placeholder="SECCIÓN" value="${label}"><button class="rm-sec" onclick="this.closest('.nb-sec').remove();renum()">✕</button></div><div class="ta-wrap"><textarea class="nb-ta" id="ta${id}" placeholder="${ph}"></textarea><button class="mic-b" onclick="toggleMic(this,document.getElementById('ta${id}'),document.getElementById('ct${id}'))">🎤</button></div><div class="ctag" id="ct${id}"></div>`;
+  c.appendChild(d);
+}
+function renum(){document.querySelectorAll('.nb-sec .nb-n').forEach((e,i)=>e.textContent=i+1);}
+DEF_SECS.forEach(s=>addSec(s.l,s.p));
+
+document.querySelectorAll('.mc').forEach(c=>{c.addEventListener('click',()=>{document.querySelectorAll('.mc').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');simMode=c.dataset.m;});});
+document.querySelectorAll('.dp').forEach(p=>{p.addEventListener('click',()=>{document.querySelectorAll('.dp').forEach(x=>x.classList.remove('active'));p.classList.add('active');difficulty=p.dataset.d;});});
+
+// ═══════════════════════
+// NOTEBOOK COLLECT
+// ═══════════════════════
+function collectNB(){
+  const out=[];
+  document.querySelectorAll('.nb-sec').forEach(s=>{
+    const l=s.querySelector('.nb-lbl').value.trim()||'Sección';
+    const c=s.querySelector('.nb-ta').value.trim();
+    if(c)out.push({l,c});
+  });
+  return out;
+}
+
+// ═══════════════════════
+// SYSTEM PROMPT
+// ═══════════════════════
+function buildSys(secs){
+  const nb=secs.map(s=>`## ${s.l}\n${s.c}`).join('\n\n');
+  const subj=SUBJECTS.find(s=>s.id===selSubject);
+  const subjName=subj?subj.name:'el tema indicado';
+  const diffInstr={easy:'Basic level: simple questions.',med:'Intermediate: application and comprehension.',hard:'Advanced: analysis, synthesis, complex relations.'}[difficulty];
+  const modeInstr={
+    video:`FLOW: 1) Documentary-style narration of ALL notes (max 200 words) in ${simLang.name}, end with challenge invitation. 2) Ask 4 open questions one at a time based EXACTLY on notes. 3) Evaluate ✓/✗ + explanation. 4) Final score X/4.`,
+    multi:`FLOW: 5 multiple choice questions (A/B/C/D) based EXACTLY on notes. Format:\nQUESTION: [question]\nA) [opt]\nB) [opt]\nC) [opt]\nD) [opt]\nCORRECT: [letter]\nEvaluate each. Final score X/5.`,
+    formulas:`FLOW: Extract or create 3 numerical problems from notes. Give data, wait for step-by-step solution. Correct procedure and result.`,
+    debate:`FLOW: "Explain to me in your own words: [concept]". Evaluate essence captured. Note missing points. 3 rounds. Mastery percentage at end.`
+  }[simMode];
+  return `You are COSMOS, expert AI tutor in ${subjName}. Always respond in ${simLang.name}.
+${diffInstr}
+STUDENT NOTES (ONLY source):
+===
+${nb}
+===
+RULES: Base ALL on notes. **bold** for key terms. ✓ correct ✗ incorrect always explain. Max 350 tokens.
+${modeInstr}`;
+}
+
+// ═══════════════════════
+// LAUNCH
+// ═══════════════════════
+async function launch(){
+  const secs=collectNB();
+  if(!secs.length){alert('Escribe al menos una sección.');return;}
+  stopMic();
+  document.getElementById('launch-btn').disabled=true;
+  document.getElementById('inp-zone').style.display='none';
+  document.getElementById('prog-wrap').style.display='block';
+  totalQ=simMode==='multi'?5:simMode==='debate'?3:4;
+  sysP=buildSys(secs);hist_=[{role:'user',content:'Start the simulation.'}];
+  setPhase(1);showLoad();
+  // track interest for selected subject
+  if(selSubject){interestMap[selSubject]=(interestMap[selSubject]||0)+2;localStorage.setItem('es_interests',JSON.stringify(interestMap));}
+  try{
+    const r=await callAI();hist_.push({role:'assistant',content:r});
+    rmLoad();addMsg('ai',r);setPhase(2);
+    if(simMode==='multi')parseMulti(r);else showAnsBar();
+  }catch(e){rmLoad();addMsg('ai',`⚠️ Error: ${e.message}`);}
+}
+
+// ═══════════════════════
+// MULTIPLE CHOICE
+// ═══════════════════════
+function parseMulti(text){
+  const hasQ=/QUESTION:|A\)|B\)|C\)|D\)/i.test(text);
+  if(!hasQ){showAnsBar();return;}
+  const cm=text.match(/CORRECT:\s*([ABCD])/i);
+  const correct=cm?cm[1].toUpperCase():null;
+  const area=document.getElementById('ans-area');
+  area.innerHTML='<div class="choices" id="ch-box"></div>';
+  const box=document.getElementById('ch-box');
+  ['A','B','C','D'].forEach(o=>{
+    const m=text.match(new RegExp(o+'\\)\\s*([^\\n]+)'));if(!m)return;
+    const btn=document.createElement('button');btn.className='cbtn';btn.textContent=o+') '+m[1].trim();
+    btn.onclick=async()=>{
+      document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);
+      const ok=correct&&o===correct;
+      btn.classList.add(ok?'ok':'bad');
+      if(!ok&&correct){const cb=document.querySelector(`.cbtn:nth-child(${['A','B','C','D'].indexOf(correct)+1})`);if(cb)cb.classList.add('ok');}
+      hist_.push({role:'user',content:`Answer: ${o}`});qC++;updateProg();showLoad();
+      try{
+        const r=await callAI();hist_.push({role:'assistant',content:r});rmLoad();addMsg('ai',r);
+        const end=/score|puntaje|calificaci[oó]n/i.test(r)&&qC>=totalQ;
+        if(end){setPhase(4);showEndBtns();}else{setPhase(3);parseMulti(r);}
+      }catch(e){rmLoad();addMsg('ai',`⚠️ ${e.message}`);}
+    };
+    box.appendChild(btn);
+  });
+  area.scrollIntoView({behavior:'smooth',block:'end'});
+}
+
+// ═══════════════════════
+// SUBMIT OPEN
+// ═══════════════════════
+async function submitAns(){
+  stopMic();
+  const inp=document.getElementById('ans-in');if(!inp)return;
+  const val=inp.value.trim();if(!val)return;
+  document.getElementById('ans-send').disabled=true;inp.disabled=true;
+  addMsg('user',val);hist_.push({role:'user',content:val});qC++;updateProg();showLoad();
+  try{
+    const r=await callAI();hist_.push({role:'assistant',content:r});rmLoad();addMsg('ai',r);
+    const end=/puntaje|calificaci[oó]n|porcentaje|score|résultat/i.test(r)&&qC>=totalQ;
+    if(end){setPhase(4);showEndBtns();}else{
+      if(qC===1)setPhase(3);
+      if(simMode==='multi')parseMulti(r);
+      else{const box=document.getElementById('ans-bar');if(box){box.querySelector('input').value='';box.querySelector('input').disabled=false;document.getElementById('ans-send').disabled=false;box.querySelector('input').focus();}else showAnsBar();}
+    }
+  }catch(e){rmLoad();addMsg('ai',`⚠️ ${e.message}`);showAnsBar();}
+}
+async function continueChat(){document.getElementById('ans-area').innerHTML='';showAnsBar();}
+
+// ═══════════════════════
+// SAVE SESSION
+// ═══════════════════════
+function saveSession(txt){
+  const pm=txt.match(/(\d+)\s*[%\/]/);let pct=null;
+  if(pm)pct=parseInt(pm[1]);
+  else{const fm=txt.match(/(\d+)\s*\/\s*(\d+)/);if(fm)pct=Math.round(parseInt(fm[1])/parseInt(fm[2])*100);}
+  const subj=SUBJECTS.find(s=>s.id===selSubject);
+  const e={date:new Date().toLocaleDateString(),subject:subj?subj.icon+' '+subj.name:'General',mode:simMode,lang:simLang.name,diff:difficulty,pct};
+  const h=JSON.parse(localStorage.getItem('es_hist')||'[]');h.unshift(e);
+  localStorage.setItem('es_hist',JSON.stringify(h.slice(0,60)));
+}
+
+// ═══════════════════════
+// UI HELPERS
+// ═══════════════════════
+async function callAI(){
+  const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sysP,messages:hist_})});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const d=await res.json();return d.content.map(c=>c.text||'').join('');
+}
+function fmt(t){
+  t=t.replace(/CORRECT:\s*[ABCD]\n?/gi,'');
+  return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/✓([^\n✗]*)/g,'<span class="ok">✓$1</span>').replace(/✗([^\n✓]*)/g,'<span class="bad">✗$1</span>').replace(/`([^`]+)`/g,'<span class="cod">$1</span>').replace(/\n/g,'<br>');
+}
+function addMsg(who,text){
+  const c=document.getElementById('chat');const d=document.createElement('div');d.className='msg';
+  d.innerHTML=`<div class="av av-${who}">${who==='ai'?'🌌':'📓'}</div><div class="bub bub-${who}">${fmt(text)}</div>`;
+  c.appendChild(d);d.scrollIntoView({behavior:'smooth',block:'end'});
+  if(who==='ai'&&/puntaje|calificaci[oó]n|porcentaje|score/i.test(text))saveSession(text);
+}
+function showLoad(){const c=document.getElementById('chat');const d=document.createElement('div');d.className='msg';d.id='loader';d.innerHTML=`<div class="av av-ai">🌌</div><div class="bub bub-ai"><div class="dots"><span></span><span></span><span></span></div></div>`;c.appendChild(d);d.scrollIntoView({behavior:'smooth',block:'end'});}
+function rmLoad(){const e=document.getElementById('loader');if(e)e.remove();}
+function showAnsBar(){
+  const a=document.getElementById('ans-area');
+  a.innerHTML=`<div class="ans-box" id="ans-bar"><input class="ans-in" id="ans-in" placeholder="Escribe o dicta..."/><button class="mic-ans" onclick="toggleMic(this,document.getElementById('ans-in'),null)">🎤</button><button class="send" id="ans-send" onclick="submitAns()">ENVIAR</button></div>`;
+  const i=document.getElementById('ans-in');i.focus();i.addEventListener('keydown',e=>{if(e.key==='Enter')submitAns();});
+  a.scrollIntoView({behavior:'smooth',block:'end'});
+}
+function showEndBtns(){document.getElementById('ans-area').innerHTML=`<div class="end-row"><button class="ghost" onclick="continueChat()">💬 SEGUIR</button><button class="ghost" onclick="resetSim()">🔄 NUEVO TEMA</button><button class="ghost" onclick="go('hist')">📊 HISTORIAL</button></div>`;}
+function resetSim(){document.getElementById('chat').innerHTML='';document.getElementById('ans-area').innerHTML='';document.getElementById('inp-zone').style.display='block';document.getElementById('launch-btn').disabled=false;document.getElementById('prog-wrap').style.display='none';document.getElementById('prog-fill').style.width='0%';hist_=[];qC=0;setPhase(0);}
+function setPhase(n){phase=n;document.querySelectorAll('.ph').forEach(t=>{const p=parseInt(t.dataset.p);t.classList.remove('cur','done');if(p<n)t.classList.add('done');if(p===n)t.classList.add('cur');});}
+function updateProg(){document.getElementById('prog-fill').style.width=Math.min((qC/totalQ)*100,100)+'%';}
+
+// ═══════════════════════
+// LIBRARY
+// ═══════════════════════
+function setLibTab(tab,el){libTab=tab;document.querySelectorAll('.lib-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');searchLib();}
+function searchLib(){
+  const q=(document.getElementById('lib-search')||{value:''}).value.toLowerCase();
+  const data=LIB_DATA[libTab]||[];
+  const results=data.filter(d=>!q||d.title.toLowerCase().includes(q)||d.subj.toLowerCase().includes(q)||d.body.toLowerCase().includes(q));
+  document.getElementById('lib-results').innerHTML=results.length
+    ?results.map(d=>`<div class="lib-result"><div class="lib-title">${d.title}</div><div class="lib-meta">${d.subj}</div><div class="lib-body">${d.body}</div></div>`).join('')
+    :'<div class="hempty">Sin resultados para "'+q+'"</div>';
+}
+
+// ═══════════════════════
+// HISTORY
+// ═══════════════════════
+function renderHist(){
+  const h=JSON.parse(localStorage.getItem('es_hist')||'[]');
+  const list=document.getElementById('hist-list');
+  if(!h.length){list.innerHTML='<div class="hempty">SIN SESIONES AÚN</div>';return;}
+  list.innerHTML=h.map(x=>{
+    const col=x.pct===null?'var(--sub)':x.pct>=80?'var(--green)':x.pct>=50?'var(--yellow)':'var(--red)';
+    return `<div class="hcard"><div class="hscore" style="color:${col}">${x.pct!==null?x.pct+'%':'—'}</div><div><div class="htop">${x.subject} · ${x.mode}</div><div class="hmeta">${x.date} · ${x.lang} · ${x.diff}</div></div></div>`;
+  }).join('');
+}
+function clearHist(){if(confirm('¿Borrar historial?')){localStorage.removeItem('es_hist');renderHist();updateStats();}}
+
+// ═══════════════════════
+// TEACHER
+// ═══════════════════════
+function addStudent(){const i=document.getElementById('stu-in');const n=i.value.trim();if(!n)return;students.push({name:n,score:null});localStorage.setItem('es_stu',JSON.stringify(students));i.value='';renderClass();}
+function renderClass(){
+  const list=document.getElementById('class-list');
+  if(!students.length){list.innerHTML='<div style="color:var(--dim);font-size:11px;padding:8px 0;font-family:var(--fm);">Sin estudiantes</div>';return;}
+  list.innerHTML=students.map((s,i)=>{
+    const col=s.score===null?'var(--sub)':s.score>=80?'var(--green)':s.score>=50?'var(--yellow)':'var(--red)';
+    const badge=s.score===null?'':s.score>=80?'<span class="sbadge g">Excelente</span>':s.score>=50?'<span class="sbadge m">Regular</span>':'<span class="sbadge l">Revisar</span>';
+    return `<div class="stu-row"><div class="stu-n">${s.name}</div>${badge}<div class="stu-s" style="color:${col}">${s.score!==null?s.score+'%':'—'}</div><button class="rm-sec" onclick="rmStu(${i})">✕</button></div>`;
+  }).join('');
+}
+function rmStu(i){students.splice(i,1);localStorage.setItem('es_stu',JSON.stringify(students));renderClass();}
+function createExam(){
+  const c=document.getElementById('exam-content').value.trim();
+  const n=document.getElementById('exam-name').value.trim();
+  if(!c){alert('Escribe el contenido de la tarea.');return;}
+  document.getElementById('secs').innerHTML='';addSec(n||'Tarea',c);
+  simMode='multi';document.querySelectorAll('.mc').forEach(x=>x.classList.toggle('sel',x.dataset.m==='multi'));
+  go('sim');
+}
+
+// ═══════════════════════
+// CREATOR TOOLS
+// ═══════════════════════
+function openCreatorTool(tool){
+  const area=document.getElementById('creator-tool-area');
+  const tools={
+    projects:`<div class="project-editor open">
+      <div class="section-ttl">🔬 PROYECTO LIBRE</div>
+      <span class="lbl">Nombre del proyecto</span>
+      <input class="t-in" id="proj-name" placeholder="Ej: Cruce genético Aa × Bb">
+      <span class="lbl">Tipo de proyecto</span>
+      <select class="cfg-sel" style="width:100%;margin-bottom:10px;" id="proj-type">
+        <option>Experimento genético</option>
+        <option>Simulación física</option>
+        <option>Reacción química</option>
+        <option>Modelo astronómico</option>
+        <option>Ecosistema</option>
+        <option>Hipótesis científica</option>
+        <option>Diseño de experimento</option>
+      </select>
+      <span class="lbl">Descripción / Variables</span>
+      <textarea class="t-ta" id="proj-desc" placeholder="Describe el experimento, variables, condiciones..."></textarea>
+      <button class="t-btn" onclick="runCreatorProject()">▶ SIMULAR PROYECTO</button>
+      <div id="proj-result" style="margin-top:12px;"></div>
+    </div>`,
+    editor:`<div class="project-editor open">
+      <div class="section-ttl">⚙️ EDITOR DE SIMULACIONES</div>
+      <span class="lbl">Escenario</span>
+      <input class="t-in" id="ed-scenario" placeholder="Ej: Cohete en gravedad cero">
+      <span class="lbl">Variables del sistema</span>
+      <div class="proj-vars">
+        <div class="var-card"><span class="var-label">MASA (kg)</span><input class="var-input" id="v-masa" placeholder="10"></div>
+        <div class="var-card"><span class="var-label">VELOCIDAD (m/s)</span><input class="var-input" id="v-vel" placeholder="100"></div>
+        <div class="var-card"><span class="var-label">TEMPERATURA (K)</span><input class="var-input" id="v-temp" placeholder="300"></div>
+        <div class="var-card"><span class="var-label">PRESIÓN (Pa)</span><input class="var-input" id="v-pres" placeholder="101325"></div>
+        <div class="var-card"><span class="var-label">GRAVEDAD (m/s²)</span><input class="var-input" id="v-grav" placeholder="9.8"></div>
+        <div class="var-card"><span class="var-label">VARIABLE EXTRA</span><input class="var-input" id="v-extra" placeholder="..."></div>
+      </div>
+      <textarea class="t-ta" id="ed-conditions" placeholder="Condiciones especiales, hipótesis, escenario único..."></textarea>
+      <button class="t-btn" onclick="runEditor()">⚙️ ANALIZAR ESCENARIO</button>
+      <div id="ed-result" style="margin-top:12px;"></div>
+    </div>`,
+    bank:`<div class="project-editor open">
+      <div class="section-ttl">📚 BANCO DE RECURSOS ILIMITADO</div>
+      <p style="font-size:12px;color:var(--sub);margin-bottom:12px;">Accede a toda la biblioteca. Guarda recursos sin límite en tu dispositivo.</p>
+      <input class="lib-search" id="bank-search" placeholder="Buscar cualquier concepto..." oninput="searchBank()">
+      <div id="bank-results"></div>
+    </div>`,
+    automation:`<div class="project-editor open">
+      <div class="section-ttl">🤖 AUTOMATIZACIÓN</div>
+      <span class="lbl">Script de automatización</span>
+      <textarea class="t-ta" id="auto-script" placeholder="Describe qué proceso quieres automatizar dentro de una simulación...&#10;Ej: Iterar 100 generaciones de cruce genético y registrar frecuencias alélicas" style="min-height:120px;"></textarea>
+      <button class="t-btn" onclick="runAutomation()">▶ EJECUTAR AUTOMATIZACIÓN</button>
+      <div id="auto-result" style="margin-top:12px;"></div>
+    </div>`,
+    publish:`<div class="project-editor open">
+      <div class="section-ttl">🌐 PUBLICAR Y COLABORAR</div>
+      <span class="lbl">Nombre del proyecto a compartir</span>
+      <input class="t-in" id="pub-name" placeholder="Nombre del proyecto">
+      <span class="lbl">Contenido</span>
+      <textarea class="t-ta" id="pub-content" placeholder="Descripción, resultados, metodología..."></textarea>
+      <span class="lbl">Permisos</span>
+      <select class="cfg-sel" style="width:100%;margin-bottom:10px;">
+        <option>Solo ver</option>
+        <option>Ver y comentar</option>
+        <option>Colaborar (editar)</option>
+        <option>Usar como plantilla</option>
+      </select>
+      <button class="t-btn" onclick="publishProject()">📤 GENERAR RESUMEN PUBLICABLE</button>
+      <div id="pub-result" style="margin-top:12px;"></div>
+    </div>`,
+    genetics:`<div class="project-editor open">
+      <div class="section-ttl">🧬 SIMULADOR GENÉTICO</div>
+      <div class="proj-vars">
+        <div class="var-card"><span class="var-label">GENOTIPO PADRE</span><input class="var-input" id="g-padre" placeholder="Aa"></div>
+        <div class="var-card"><span class="var-label">GENOTIPO MADRE</span><input class="var-input" id="g-madre" placeholder="Aa"></div>
+        <div class="var-card"><span class="var-label">ORGANISMO</span><input class="var-input" id="g-org" placeholder="Guisante, Humano..."></div>
+        <div class="var-card"><span class="var-label">CARACTERÍSTICA</span><input class="var-input" id="g-char" placeholder="Color de ojos..."></div>
+      </div>
+      <button class="t-btn" onclick="runGenetics()">🧬 SIMULAR CRUCE</button>
+      <div id="gen-result" style="margin-top:12px;"></div>
+    </div>`
+  };
+  area.innerHTML=tools[tool]||'';
+  if(tool==='bank')searchBank();
+  area.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function runCreatorProject(){
+  const name=document.getElementById('proj-name').value;
+  const type=document.getElementById('proj-type').value;
+  const desc=document.getElementById('proj-desc').value;
+  if(!desc){alert('Describe el proyecto.');return;}
+  const result=document.getElementById('proj-result');
+  result.innerHTML='<div class="bub bub-ai"><div class="dots"><span></span><span></span><span></span></div></div>';
+  try{
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`Eres COSMOS, tutor científico avanzado sin restricciones para proyectos educativos. Responde en español con análisis detallado, predicciones, fórmulas relevantes y pasos. Eres el asistente del Creador del sistema EduSim.`,messages:[{role:'user',content:`PROYECTO: ${name}\nTIPO: ${type}\nDESCRIPCIÓN: ${desc}\n\nAnaliza este proyecto científico. Da: 1) Fundamentos teóricos 2) Variables y predicciones 3) Pasos del experimento 4) Resultados esperados 5) Fórmulas relevantes`}]})});
+    const d=await res.json();
+    result.innerHTML=`<div class="bub bub-ai">${fmt(d.content.map(c=>c.text||'').join(''))}</div>`;
+  }catch(e){result.innerHTML=`<div class="bub bub-ai">⚠️ ${e.message}</div>`;}
+}
+
+async function runEditor(){
+  const scenario=document.getElementById('ed-scenario').value;
+  const masa=document.getElementById('v-masa').value;
+  const vel=document.getElementById('v-vel').value;
+  const temp=document.getElementById('v-temp').value;
+  const pres=document.getElementById('v-pres').value;
+  const grav=document.getElementById('v-grav').value;
+  const extra=document.getElementById('v-extra').value;
+  const cond=document.getElementById('ed-conditions').value;
+  const result=document.getElementById('ed-result');
+  result.innerHTML='<div class="bub bub-ai"><div class="dots"><span></span><span></span><span></span></div></div>';
+  try{
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`Eres COSMOS, simulador físico avanzado. Analiza escenarios con variables dadas. Muestra cálculos paso a paso, predicciones y consecuencias físicas. Responde en español.`,messages:[{role:'user',content:`ESCENARIO: ${scenario}\nVARIABLES:\n- Masa: ${masa} kg\n- Velocidad: ${vel} m/s\n- Temperatura: ${temp} K\n- Presión: ${pres} Pa\n- Gravedad: ${grav} m/s²\n- Extra: ${extra}\nCONDICIONES: ${cond}\n\nAnaliza físicamente este escenario. Calcula fuerzas, energías, trayectorias o lo que aplique. Muestra fórmulas y resultados numéricos.`}]})});
+    const d=await res.json();
+    result.innerHTML=`<div class="bub bub-ai">${fmt(d.content.map(c=>c.text||'').join(''))}</div>`;
+  }catch(e){result.innerHTML=`<div class="bub bub-ai">⚠️ ${e.message}</div>`;}
+}
+
+function searchBank(){
+  const q=(document.getElementById('bank-search')||{value:''}).value.toLowerCase();
+  const all=[...LIB_DATA.teoria,...LIB_DATA.formulas,...LIB_DATA.ejemplos,...LIB_DATA.investigacion];
+  const results=all.filter(d=>!q||d.title.toLowerCase().includes(q)||d.body.toLowerCase().includes(q));
+  document.getElementById('bank-results').innerHTML=results.map(d=>`<div class="lib-result"><div class="lib-title">${d.title}</div><div class="lib-meta">${d.subj}</div><div class="lib-body">${d.body}</div></div>`).join('')||'<div class="hempty">Sin resultados</div>';
+}
+
+async function runAutomation(){
+  const script=document.getElementById('auto-script').value;
+  if(!script){alert('Describe el proceso a automatizar.');return;}
+  const result=document.getElementById('auto-result');
+  result.innerHTML='<div class="bub bub-ai"><div class="dots"><span></span><span></span><span></span></div></div>';
+  try{
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`Eres COSMOS, motor de automatización científica. Simula procesos iterativos, genera resultados paso a paso, crea tablas de datos, muestra progresión de variables. Responde en español con datos estructurados.`,messages:[{role:'user',content:`PROCESO A AUTOMATIZAR:\n${script}\n\nSimula este proceso. Muestra iteraciones, resultados en tabla si aplica, tendencias y conclusión final.`}]})});
+    const d=await res.json();
+    result.innerHTML=`<div class="bub bub-ai">${fmt(d.content.map(c=>c.text||'').join(''))}</div>`;
+  }catch(e){result.innerHTML=`<div class="bub bub-ai">⚠️ ${e.message}</div>`;}
+}
+
+async function publishProject(){
+  const name=document.getElementById('pub-name').value;
+  const content=document.getElementById('pub-content').value;
+  if(!content){alert('Escribe el contenido del proyecto.');return;}
+  const result=document.getElementById('pub-result');
+  result.innerHTML='<div class="bub bub-ai"><div class="dots"><span></span><span></span><span></span></div></div>';
+  try{
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`Eres COSMOS. Genera resúmenes científicos publicables y estructurados. Incluye: abstract, metodología, resultados, conclusiones y cómo otros podrían colaborar. Responde en español.`,messages:[{role:'user',content:`PROYECTO: ${name}\nCONTENIDO: ${content}\n\nGenera un resumen publicable y estructurado para compartir con colegas o estudiantes.`}]})});
+    const d=await res.json();
+    result.innerHTML=`<div class="bub bub-ai">${fmt(d.content.map(c=>c.text||'').join(''))}</div>`;
+  }catch(e){result.innerHTML=`<div class="bub bub-ai">⚠️ ${e.message}</div>`;}
+}
+
+async function runGenetics(){
+  const padre=document.getElementById('g-padre').value||'Aa';
+  const madre=document.getElementById('g-madre').value||'Aa';
+  const org=document.getElementById('g-org').value||'genérico';
+  const char=document.getElementById('g-char').value||'característica';
+  const result=document.getElementById('gen-result');
+  result.innerHTML='<div class="bub bub-ai"><div class="dots"><span></span><span></span><span></span></div></div>';
+  try{
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`Eres COSMOS, simulador genético experto. Analiza cruces genéticos con tabla de Punnett, proporciones genotípicas y fenotípicas, y explicación biológica completa. Responde en español.`,messages:[{role:'user',content:`CRUCE GENÉTICO:\nOrganismo: ${org}\nCaracterística: ${char}\nGenotipo Padre: ${padre}\nGenotipo Madre: ${madre}\n\nMuestra: 1) Tabla de Punnett completa 2) Proporciones genotípicas 3) Proporciones fenotípicas 4) Explicación biológica 5) Probabilidades en porcentaje`}]})});
+    const d=await res.json();
+    result.innerHTML=`<div class="bub bub-ai">${fmt(d.content.map(c=>c.text||'').join(''))}</div>`;
+  }catch(e){result.innerHTML=`<div class="bub bub-ai">⚠️ ${e.message}</div>`;}
+}
+
+// ═══════════════════════
+// INIT
+// ═══════════════════════
+buildCats();filterSubjects();updateStats();buildSubjSel();buildLangList();renderAchievements();detectInterests();
+</script>
+</body>
+</html>
